@@ -6,13 +6,13 @@ import pandas as pd
 def check_if_loaded(tracker, file):
     for i in tracker:
         if file in i and i[file]:
-            return 1
-    return 0
+            return 1, i[file]
+    return 0, None
 
 def process_tracker_directory(tracker_directory):
     df = pd.read_excel(tracker_directory)
 
-    df['Field Mapping Complete'] = np.where(df['Field Mapping Complete'] == 1, True, False)
+    df['Field Mapping Complete'] = np.where(df['Field Mapping Complete'] == 1, "True", "False")
 
     result = (
         df.groupby("Folder", group_keys=False)
@@ -27,6 +27,8 @@ def process_tracker_directory(tracker_directory):
 
 def run(directory, tracker_directory) -> None:
     tracker_list = process_tracker_directory(tracker_directory = tracker_directory)
+    complete_field_mapping = []
+    not_complete_field_mapping = []
 
     with os.scandir(directory) as entries:
         for entry in entries:
@@ -37,11 +39,16 @@ def run(directory, tracker_directory) -> None:
                 if entry.name in tracker_list:
                     for i in os.scandir(os.path.join(directory, entry.name)):
                         value = check_if_loaded(tracker=tracker_list[entry.name], file=i.name)
-                        if value == 1:
-                            pass
-
-                            # TODO: for this one i still need to further get to the details of field mapping being completed or not
+                        if value[0] == 1:
+                            if value[1] == 'True':
+                                complete_field_mapping.append(i.name)
+                            else:
+                                not_complete_field_mapping.append(i.name)
                         else:
                             print(f"[bold]{entry.name}[/bold]: '{i.name}' - [red]not yet added to the tracker[/red]")
                 else:
                     print(f"[bold]{entry.name}[/bold] [red]add to the tracker[/red]")
+
+    print("Finish the field mapping for these: ")
+    for i in not_complete_field_mapping:
+        print(i)
