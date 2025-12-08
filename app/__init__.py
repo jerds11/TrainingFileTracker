@@ -1,16 +1,13 @@
+from rich import print
 import numpy as np
 import os
 import pandas as pd
 
-def check_if_loaded(tracker_list, entry, file):
-    if entry not in tracker_list:
-        return 3
-
-    tracker = tracker_list[entry]
+def check_if_loaded(tracker, file):
     for i in tracker:
-        if i[file]:
+        if file in i and i[file]:
             return 1
-    return 2
+    return 0
 
 def process_tracker_directory(tracker_directory):
     df = pd.read_excel(tracker_directory)
@@ -34,25 +31,17 @@ def run(directory, tracker_directory) -> None:
     with os.scandir(directory) as entries:
         for entry in entries:
             if entry.is_file():
-                pass
+                print(f"Skipping '{entry.name}' this is not a folder")
 
             elif entry.is_dir():
-
-                # TODO: i need to update this lines of code ...
-                with os.scandir(entry) as files:
-                    for file in files:
-                        value = check_if_loaded(
-                            tracker_list=tracker_list,
-                            entry=entry,
-                            file=file
-                        )
-
+                if entry.name in tracker_list:
+                    for i in os.scandir(os.path.join(directory, entry.name)):
+                        value = check_if_loaded(tracker=tracker_list[entry.name], file=i.name)
                         if value == 1:
                             pass
-                        
-                        elif value == 2:
-                            pass
 
-                        elif value == 3:
-                            print("This folder exist but not yet on the tracker.")
-                            
+                            # TODO: for this one i still need to further get to the details of field mapping being completed or not
+                        else:
+                            print(f"[bold]{entry.name}[/bold]: '{i.name}' - [red]not yet added to the tracker[/red]")
+                else:
+                    print(f"[bold]{entry.name}[/bold] [red]add to the tracker[/red]")
