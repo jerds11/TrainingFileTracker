@@ -29,6 +29,8 @@ def run(directory, tracker_directory) -> None:
     tracker_list = process_tracker_directory(tracker_directory = tracker_directory)
     complete_field_mapping = []
     not_complete_field_mapping = []
+    folder_not_yet_added = []
+    file_not_yet_added = []
 
     with os.scandir(directory) as entries:
         for entry in entries:
@@ -46,9 +48,31 @@ def run(directory, tracker_directory) -> None:
                                 not_complete_field_mapping.append(i.name)
                         else:
                             print(f"[bold]{entry.name}[/bold]: '{i.name}' - [red]not yet added to the tracker[/red]")
+                            file_not_yet_added.append(i.name)
                 else:
                     print(f"[bold]{entry.name}[/bold] [red]add to the tracker[/red]")
+                    folder_not_yet_added.append(entry.name)
 
     print("Finish the field mapping for these: ")
     for i in not_complete_field_mapping:
         print(i)
+
+    lists = [
+        complete_field_mapping,
+        not_complete_field_mapping,
+        folder_not_yet_added,
+        file_not_yet_added
+    ]
+
+    max_len = max(len(lst) for lst in lists)
+
+    padded_lists = [lst + [None]*(max_len - len(lst)) for lst in lists]
+
+    new_df = pd.DataFrame({
+        "Completed Field Mapping": padded_lists[0],
+        "Not yet finished Field Mapping": padded_lists[1],
+        "Folder not yet added to the tracker": padded_lists[2],
+        "File not yet added to the tracker": padded_lists[3]
+    })
+
+    new_df.to_csv("Tracker output.csv", index = False)

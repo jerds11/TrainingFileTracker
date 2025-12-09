@@ -19,4 +19,3 @@ if __name__ == '__main__':
     end_time = time()
 
     print(f"{round(end_time - start_time, 0)} seconds")
-    
